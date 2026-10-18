@@ -70,8 +70,9 @@ typedef struct lua_State lua_State;
 #define LUA_TFUNCTION		6
 #define LUA_TUSERDATA		7
 #define LUA_TTHREAD		8
+#define LUA_TDECIMAL		9
 
-#define LUA_NUMTYPES		9
+#define LUA_NUMTYPES		10
 
 
 
@@ -374,6 +375,15 @@ LUA_API void  (lua_len)    (lua_State *L, int idx);
 #define LUA_N2SBUFFSZ	64
 LUA_API unsigned  (lua_numbertocstring) (lua_State *L, int idx, char *buff);
 LUA_API size_t  (lua_stringtonumber) (lua_State *L, const char *s);
+
+/* decimals: the mantissa magnitude is hi * 2^64 + lo, the value is
+   +-mantissa * 10^exponent with the exponent in [-28, 0] */
+#define lua_isdecimal(L,n)	(lua_type(L, (n)) == LUA_TDECIMAL)
+LUA_API int  (lua_todecimal) (lua_State *L, int idx, int *neg,
+                              lua_Unsigned *hi, lua_Unsigned *lo, int *exp);
+LUA_API void (lua_pushdecimal) (lua_State *L, int neg, lua_Unsigned hi,
+                                lua_Unsigned lo, int exp);
+LUA_API unsigned (lua_decimaltocstring) (lua_State *L, int idx, char *buff);
 
 LUA_API lua_Alloc (lua_getallocf) (lua_State *L, void **ud);
 LUA_API void      (lua_setallocf) (lua_State *L, lua_Alloc f, void *ud);

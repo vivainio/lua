@@ -400,6 +400,7 @@ union GCUnion {
   struct Proto p;
   struct lua_State th;  /* thread */
   struct UpVal upv;
+  struct Decimal dec;
 };
 
 
@@ -422,6 +423,7 @@ union GCUnion {
 #define gco2p(o)	gco2(LUA_VPROTO, Proto, o)
 #define gco2th(o)	gco2(LUA_VTHREAD, lua_State, o)
 #define gco2upv(o)	gco2(LUA_VUPVAL, UpVal, o)
+#define gco2dec(o)	gco2(LUA_VDECIMAL, Decimal, o)
 
 
 /*

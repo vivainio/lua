@@ -154,6 +154,10 @@ static l_mem objsize (GCObject *o) {
       res = sizeof(UpVal);
       break;
     }
+    case LUA_VDECIMAL: {
+      res = sizeof(Decimal);
+      break;
+    }
     default: res = 0; lua_assert(0);
   }
   return cast(l_mem, res);
@@ -340,7 +344,8 @@ static void reallymarkobject (global_State *g, GCObject *o) {
   g->GCmarked += objsize(o);
   switch (o->tt) {
     case LUA_VSHRSTR:
-    case LUA_VLNGSTR: {
+    case LUA_VLNGSTR:
+    case LUA_VDECIMAL: {
       set2black(o);  /* nothing to visit */
       break;
     }
@@ -863,6 +868,9 @@ static void freeobj (lua_State *L, GCObject *o) {
       luaM_freemem(L, o, sizeudata(u->nuvalue, u->len));
       break;
     }
+    case LUA_VDECIMAL:
+      luaM_freemem(L, o, sizeof(Decimal));
+      break;
     case LUA_VSHRSTR: {
       TString *ts = gco2ts(o);
       luaS_remove(L, ts);  /* remove it from hash table */

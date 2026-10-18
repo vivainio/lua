@@ -51,6 +51,9 @@ LUAMOD_API int (luaopen_string) (lua_State *L);
 LUAMOD_API int (luaopen_table) (lua_State *L);
 
 #define LUA_UTF8LIBNAME	"utf8"
+
+#define LUA_DECLIBNAME	"decimal"
+LUAMOD_API int (luaopen_decimal) (lua_State *L);
 #define LUA_UTF8LIBK	(LUA_TABLIBK << 1)
 LUAMOD_API int (luaopen_utf8) (lua_State *L);
 

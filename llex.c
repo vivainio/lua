@@ -26,6 +26,7 @@
 #include "lstring.h"
 #include "ltable.h"
 #include "lzio.h"
+#include "ldecimal.h"
 
 
 
@@ -104,7 +105,7 @@ const char *luaX_token2str (LexState *ls, int token) {
 static const char *txtToken (LexState *ls, int token) {
   switch (token) {
     case TK_NAME: case TK_STRING:
-    case TK_FLT: case TK_INT:
+    case TK_FLT: case TK_INT: case TK_DEC:
       save(ls, '\0');
       return luaO_pushfstring(ls->L, "'%s'", luaZ_buffer(ls->buff));
     default:
@@ -245,16 +246,35 @@ static int read_numeral (LexState *ls, SemInfo *seminfo) {
   TValue obj;
   const char *expo = "Ee";
   int first = ls->current;
+  int hex = 0;
   lua_assert(lisdigit(ls->current));
   save_and_next(ls);
-  if (first == '0' && check_next2(ls, "xX"))  /* hexadecimal? */
+  if (first == '0' && check_next2(ls, "xX")) {  /* hexadecimal? */
     expo = "Pp";
+    hex = 1;
+  }
   for (;;) {
     if (check_next2(ls, expo))  /* exponent mark? */
       check_next2(ls, "-+");  /* optional exponent sign */
+    else if (!hex && (ls->current == 'd' || ls->current == 'D'))
+      break;  /* decimal suffix (in a hex numeral 'd' is a digit) */
     else if (lisxdigit(ls->current) || ls->current == '.')  /* '%x|%.' */
       save_and_next(ls);
     else break;
+  }
+  if (!hex && (ls->current == 'd' || ls->current == 'D')) {  /* decimal? */
+    DecMant m;
+    int e, exact;
+    next(ls);  /* skip the suffix, it is not part of the digits */
+    if (lislalnum(ls->current))  /* numeral touching a letter? */
+      save_and_next(ls);  /* force an error */
+    save(ls, '\0');
+    if (!luaDec_parse(luaZ_buffer(ls->buff), luaZ_bufflen(ls->buff) - 1,
+                      &m, &e, &exact) || !exact)  /* a literal is never rounded */
+      lexerror(ls, "malformed decimal", TK_DEC);
+    seminfo->ts = luaX_newstring(ls, luaZ_buffer(ls->buff),
+                                     luaZ_bufflen(ls->buff) - 1);
+    return TK_DEC;
   }
   if (lislalpha(ls->current))  /* is numeral touching a letter? */
     save_and_next(ls);  /* force an error */

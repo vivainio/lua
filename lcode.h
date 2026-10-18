@@ -65,6 +65,7 @@ LUAI_FUNC int luaK_codeABCk (FuncState *fs, OpCode o, int A, int B, int C,
                                             int k);
 LUAI_FUNC int luaK_codevABCk (FuncState *fs, OpCode o, int A, int B, int C,
                                              int k);
+LUAI_FUNC int luaK_decimalK (FuncState *fs, TString *digits);
 LUAI_FUNC int luaK_exp2const (FuncState *fs, const expdesc *e, TValue *v);
 LUAI_FUNC void luaK_fixline (FuncState *fs, int line);
 LUAI_FUNC void luaK_nil (FuncState *fs, int from, int n);

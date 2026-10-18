@@ -23,6 +23,7 @@
 #include "lstring.h"
 #include "ltable.h"
 #include "lundump.h"
+#include "ldecimal.h"
 #include "lzio.h"
 
 
@@ -225,6 +226,19 @@ static void loadConstants (LoadState *S, Proto *f) {
       case LUA_VNUMINT:
         setivalue(o, loadInteger(S));
         break;
+      case LUA_VDECIMAL: {
+        int neg = loadByte(S);
+        int scale = loadByte(S);
+        unsigned int hi = cast(unsigned int, loadInteger(S));
+        lua_Unsigned lo = cast(lua_Unsigned, loadInteger(S));
+        Decimal *d;
+        if (scale > DEC_MAXSCALE || neg > 1 || hi >= (1u << 26))
+          error(S, "invalid decimal constant");
+        d = luaDec_new(S->L, 0, -scale);
+        d->neg = cast_byte(neg); d->hi = hi; d->lo = lo;
+        setdecvalue(S->L, o, d);
+        break;
+      }
       case LUA_VSHRSTR:
       case LUA_VLNGSTR: {
         lua_assert(f->source == NULL);

@@ -30,6 +30,7 @@
 #include "ltable.h"
 #include "ltm.h"
 #include "lvm.h"
+#include "ldecimal.h"
 
 
 /*
@@ -629,6 +630,8 @@ int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
         return eqshrstr(tsvalue(t1), tsvalue(t2));
       case LUA_VLNGSTR:
         return luaS_eqstr(tsvalue(t1), tsvalue(t2));
+      case LUA_VDECIMAL:
+        return luaDec_equal(decvalue(t1), decvalue(t2));
       case LUA_VUSERDATA: {
         if (uvalue(t1) == uvalue(t2)) return 1;
         else if (L == NULL) return 0;
@@ -1568,6 +1571,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         StkId result = RA(pi);
         lua_assert(OP_ADD <= GET_OPCODE(pi) && GET_OPCODE(pi) <= OP_SHR);
         Protect(luaT_trybinTM(L, s2v(ra), rb, result, tm));
+        checkGC(L, ci->top.p);  /* a decimal result is a new object */
         vmbreak;
       }
       vmcase(OP_MMBINI) {
@@ -1578,6 +1582,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         int flip = GETARG_k(i);
         StkId result = RA(pi);
         Protect(luaT_trybiniTM(L, s2v(ra), imm, flip, result, tm));
+        checkGC(L, ci->top.p);  /* a decimal result is a new object */
         vmbreak;
       }
       vmcase(OP_MMBINK) {
@@ -1588,6 +1593,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         int flip = GETARG_k(i);
         StkId result = RA(pi);
         Protect(luaT_trybinassocTM(L, s2v(ra), imm, flip, result, tm));
+        checkGC(L, ci->top.p);  /* a decimal result is a new object */
         vmbreak;
       }
       vmcase(OP_UNM) {
@@ -1602,7 +1608,10 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
           setfltvalue(s2v(ra), luai_numunm(L, nb));
         }
         else
+        {
           Protect(luaT_trybinTM(L, rb, rb, ra, TM_UNM));
+          checkGC(L, ci->top.p);  /* a decimal result is a new object */
+        }
         vmbreak;
       }
       vmcase(OP_BNOT) {
