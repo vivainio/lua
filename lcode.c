@@ -29,6 +29,7 @@
 #include "lstring.h"
 #include "ltable.h"
 #include "lvm.h"
+#include "ldecimal.h"
 
 
 /* (note that expressions VJMP also have jumps.) */
@@ -614,6 +615,22 @@ static int luaK_intK (FuncState *fs, lua_Integer n) {
 ** cases, just generate a new entry. At worst, this only wastes an entry
 ** with a duplicate.
 */
+/*
+** Add a decimal constant, given the digits of its literal. Decimals cannot
+** be table keys, so there is no cache: each literal gets its own constant.
+*/
+int luaK_decimalK (FuncState *fs, TString *digits) {
+  TValue o;
+  DecMant m;
+  int e, exact;
+  int ok = luaDec_parse(getstr(digits), tsslen(digits), &m, &e, &exact);
+  lua_assert(ok && exact);
+  UNUSED(ok);
+  setdecvalue(fs->ls->L, &o, luaDec_new(fs->ls->L, m, e));
+  return addk(fs, fs->f, &o);
+}
+
+
 static int luaK_numberK (FuncState *fs, lua_Number r) {
   TValue o, kv;
   setfltvalue(&o, r);  /* value as a TValue */

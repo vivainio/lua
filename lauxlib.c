@@ -946,6 +946,12 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
         lua_pushstring(L, buff);
         break;
       }
+      case LUA_TDECIMAL: {
+        char buff[LUA_N2SBUFFSZ];
+        lua_decimaltocstring(L, idx, buff);
+        lua_pushstring(L, buff);
+        break;
+      }
       case LUA_TSTRING:
         lua_pushvalue(L, idx);
         break;

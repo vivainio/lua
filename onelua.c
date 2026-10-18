@@ -97,6 +97,7 @@
 #include "lobject.c"
 #include "ltm.c"
 #include "lstring.c"
+#include "ldecimal.c"
 #include "ltable.c"
 #include "ldo.c"
 #include "lvm.c"
@@ -117,6 +118,7 @@
 #include "lstrlib.c"
 #include "ltablib.c"
 #include "lutf8lib.c"
+#include "ldeclib.c"
 #include "linit.c"
 #endif
 

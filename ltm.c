@@ -23,6 +23,7 @@
 #include "ltable.h"
 #include "ltm.h"
 #include "lvm.h"
+#include "ldecimal.h"
 
 
 static const char udatatypename[] = "userdata";
@@ -30,7 +31,7 @@ static const char udatatypename[] = "userdata";
 LUAI_DDEF const char *const luaT_typenames_[LUA_TOTALTYPES] = {
   "no value",
   "nil", "boolean", udatatypename, "number",
-  "string", "table", "function", udatatypename, "thread",
+  "string", "table", "function", udatatypename, "thread", "decimal",
   "upvalue", "proto" /* these last cases are used for tests only */
 };
 
@@ -150,6 +151,8 @@ static int callbinTM (lua_State *L, const TValue *p1, const TValue *p2,
 void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
                     StkId res, TMS event) {
   if (l_unlikely(callbinTM(L, p1, p2, res, event) < 0)) {
+    if (luaDec_arith(L, p1, p2, res, event))  /* decimal operation? */
+      return;
     switch (event) {
       case TM_BAND: case TM_BOR: case TM_BXOR:
       case TM_SHL: case TM_SHR: case TM_BNOT: {
@@ -202,6 +205,8 @@ int luaT_callorderTM (lua_State *L, const TValue *p1, const TValue *p2,
   int tag = callbinTM(L, p1, p2, L->top.p, event);  /* try original event */
   if (tag >= 0)  /* found tag method? */
     return !tagisfalse(tag);
+  if (luaDec_isorder(p1, p2))  /* decimal comparison? */
+    return luaDec_order(L, p1, p2, event);
   luaG_ordererror(L, p1, p2);  /* no metamethod found */
   return 0;  /* to avoid warnings */
 }

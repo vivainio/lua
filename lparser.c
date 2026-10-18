@@ -1263,6 +1263,10 @@ static void simpleexp (LexState *ls, expdesc *v) {
       v->u.nval = ls->t.seminfo.r;
       break;
     }
+    case TK_DEC: {
+      init_exp(v, VK, luaK_decimalK(ls->fs, ls->t.seminfo.ts));
+      break;
+    }
     case TK_INT: {
       init_exp(v, VKINT, 0);
       v->u.ival = ls->t.seminfo.i;

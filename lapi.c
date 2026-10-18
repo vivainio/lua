@@ -29,6 +29,7 @@
 #include "ltm.h"
 #include "lundump.h"
 #include "lvm.h"
+#include "ldecimal.h"
 
 
 
@@ -372,6 +373,43 @@ LUA_API unsigned lua_numbertocstring (lua_State *L, int idx, char *buff) {
     unsigned len = luaO_tostringbuff(o, buff);
     buff[len++] = '\0';  /* add final zero */
     return len;
+  }
+  else
+    return 0;
+}
+
+
+LUA_API int lua_todecimal (lua_State *L, int idx, int *neg,
+                           lua_Unsigned *hi, lua_Unsigned *lo, int *exp) {
+  const TValue *o = index2value(L, idx);
+  if (!ttisdecimal(o))
+    return 0;
+  *neg = decvalue(o)->neg;
+  *hi = decvalue(o)->hi;
+  *lo = decvalue(o)->lo;
+  *exp = luaDec_exp(decvalue(o));
+  return 1;
+}
+
+
+LUA_API void lua_pushdecimal (lua_State *L, int neg, lua_Unsigned hi,
+                              lua_Unsigned lo, int exp) {
+  DecMant m = (((DecMant)hi << 64) | lo);
+  lua_lock(L);
+  api_check(L, exp <= 0 && exp >= -DEC_MAXSCALE && m <= DEC_MAXMANT,
+               "decimal out of range");
+  setdecvalue(L, s2v(L->top.p), luaDec_new(L, neg ? -m : m, exp));
+  api_incr_top(L);
+  luaC_checkGC(L);
+  lua_unlock(L);
+}
+
+
+LUA_API unsigned lua_decimaltocstring (lua_State *L, int idx, char *buff) {
+  const TValue *o = index2value(L, idx);
+  if (ttisdecimal(o)) {
+    const Decimal *d = decvalue(o);
+    return cast_uint(luaDec_tostr(buff, luaDec_mant(d), luaDec_exp(d))) + 1;
   }
   else
     return 0;

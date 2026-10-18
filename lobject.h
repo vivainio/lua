@@ -366,6 +366,37 @@ typedef struct GCObject {
 
 /*
 ** {==================================================================
+** Decimals
+** A decimal is an immutable collectable object, like a string: a
+** mantissa and a scale do not fit in the 9 bytes (value + tag) that a
+** table uses for an array slot. See ldecimal.h for the number format.
+** ===================================================================
+*/
+
+#define LUA_VDECIMAL	makevariant(LUA_TDECIMAL, 0)
+
+#define ttisdecimal(o)		checktag((o), ctb(LUA_VDECIMAL))
+
+#define decvalue(o)	check_exp(ttisdecimal(o), gco2dec(val_(o).gc))
+
+#define setdecvalue(L,obj,x) \
+  { TValue *io = (obj); Decimal *x_ = (x); \
+    val_(io).gc = obj2gco(x_); settt_(io, ctb(LUA_VDECIMAL)); \
+    checkliveness(L,io); }
+
+typedef struct Decimal {
+  CommonHeader;
+  lu_byte neg;  /* sign of the mantissa (never set for zero) */
+  lu_byte scale;  /* digits after the point, 0 to 28 */
+  unsigned int hi;  /* the mantissa magnitude is hi * 2^64 + lo */
+  lua_Unsigned lo;
+} Decimal;
+
+/* }================================================================== */
+
+
+/*
+** {==================================================================
 ** Strings
 ** ===================================================================
 */

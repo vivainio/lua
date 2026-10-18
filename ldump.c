@@ -197,6 +197,14 @@ static void dumpConstants (DumpState *D, const Proto *f) {
       case LUA_VLNGSTR:
         dumpString(D, tsvalue(o));
         break;
+      case LUA_VDECIMAL: {
+        const Decimal *d = decvalue(o);
+        dumpByte(D, d->neg);
+        dumpByte(D, d->scale);
+        dumpInteger(D, cast(lua_Integer, d->hi));
+        dumpInteger(D, cast(lua_Integer, d->lo));
+        break;
+      }
       default:
         lua_assert(tt == LUA_VNIL || tt == LUA_VFALSE || tt == LUA_VTRUE);
     }
